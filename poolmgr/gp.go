@@ -294,7 +294,7 @@ func (gp *GenericPool) specializePod(pod *v1.Pod, metadata *api.ObjectMeta) erro
 	// for fetcher we don't need to create a service, just talk to the pod directly
 	podIP := pod.Status.PodIP
 	if len(podIP) == 0 {
-		return errors.New("Pod has no IP")
+		return errors.New("pod has no IP")
 	}
 
 	// tell fetcher to get the function.
@@ -319,7 +319,13 @@ func (gp *GenericPool) specializePod(pod *v1.Pod, metadata *api.ObjectMeta) erro
 	// retry the specialize call a few times in case the env server hasn't come up yet
 	maxRetries := 20
 	for i := 0; i < maxRetries; i++ {
-		resp2, err := http.Post(specializeUrl, "text/plain", bytes.NewReader([]byte{}))
+
+		md, err := json.Marshal(metadata)
+		if err != nil {
+			return err
+		}
+
+		resp2, err := http.Post(specializeUrl, "application/json", bytes.NewReader(md))
 		if err == nil && resp2.StatusCode < 300 {
 			// Success
 			resp2.Body.Close()
